@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dibujá Conmigo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#2B2B2B;
+    --paper:#FFFBF2;
+    --paper-line:#EFE7D3;
+    --coral:#FF6B4A;
+    --sun:#FFC93C;
+    --sky:#4EA8DE;
+    --leaf:#4CB963;
+    --lavender:#B79CED;
+    --panel:#FFFFFF;
+    --shadow: 4px 4px 0 rgba(43,43,43,0.12);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    background-image: repeating-linear-gradient(180deg, transparent 0 27px, var(--paper-line) 27px 28px);
+    font-family:'Nunito',sans-serif;
+    color:var(--ink);
+    min-height:100vh;
+  }
+  .app{max-width:1080px;margin:0 auto;padding:0 0 40px;}
+  header{padding:22px 20px 14px;text-align:center;}
+  header h1{
+    font-family:'Baloo 2',sans-serif;
+    font-weight:800;
+    font-size:clamp(28px,6vw,40px);
+    margin:0 0 4px;
+    color:var(--ink);
+  }
+  header p{margin:0;font-size:15px;font-weight:700;color:#6b6355;}
+  .crayon-stripe{
+    height:7px;width:100%;
+    background: repeating-linear-gradient(90deg,
+      var(--coral) 0 26px, var(--sun) 26px 52px,
+      var(--sky) 52px 78px, var(--leaf) 78px 104px,
+      var(--lavender) 104px 130px);
+    border-radius:6px;
+  }
+
+  .filters{padding:16px 20px 0; display:flex; flex-direction:column; gap:8px;}
+  .filter-row{display:flex; gap:8px; overflow-x:auto; padding-bottom:4px; -webkit-overflow-scrolling:touch;}
+  .filter-row::-webkit-scrollbar{height:6px;}
+  .filter-row::-webkit-scrollbar-thumb{background:#e3d9bf;border-radius:8px;}
+  .chip{
+    flex:0 0 auto; font-family:'Baloo 2',sans-serif; font-weight:700; font-size:13px;
+    background:var(--panel); border:3px solid var(--ink); border-radius:20px;
+    padding:6px 14px; cursor:pointer; white-space:nowrap;
+  }
+  .chip.active{background:var(--ink); color:#fff;}
+  .chip.diff-facil.active{background:var(--leaf); color:#fff;}
+  .chip.diff-medio.active{background:var(--sun); color:var(--ink);}
+  .chip.diff-dificil.active{background:var(--coral); color:#fff;}
+
+  .gallery{
+    display:flex; gap:12px; overflow-x:auto;
+    padding:14px 20px 6px; -webkit-overflow-scrolling:touch;
+  }
+  .gallery::-webkit-scrollbar{height:8px;}
+  .gallery::-webkit-scrollbar-thumb{background:#e3d9bf;border-radius:8px;}
+  .empty-msg{padding:20px; font-weight:800; color:#a89b7c;}
+  .tut-card{
+    position:relative;
+    flex:0 0 auto; width:86px; background:var(--panel);
+    border:3px solid var(--ink); border-radius:16px;
+    padding:8px 6px 6px; cursor:pointer; text-align:center;
+    box-shadow:var(--shadow); transition:transform .12s ease;
+  }
+  .tut-card:hover{transform:translateY(-2px);}
+  .tut-card.active{background:var(--sun); border-color:var(--ink);}
+  .tut-card svg{width:56px;height:56px;}
+  .tut-card span.tname{display:block;font-family:'Baloo 2',sans-serif;font-weight:700;font-size:12px;margin-top:2px;line-height:1.2;}
+  .diff-dots{display:flex; gap:3px; justify-content:center; margin-top:4px;}
+  .diff-dots i{width:6px;height:6px;border-radius:50%; background:#e0d8c3; display:inline-block;}
+  .diff-dots i.on.facil{background:var(--leaf);}
+  .diff-dots i.on.medio{background:var(--sun);}
+  .diff-dots i.on.dificil{background:var(--coral);}
+
+  main.workspace{
+    display:grid; grid-template-columns: 1fr 220px; gap:18px;
+    padding:10px 20px 0; align-items:start;
+  }
+  @media (max-width:720px){
+    main.workspace{grid-template-columns:1fr;}
+  }
+
+  .canvas-wrap{display:flex; flex-direction:column; gap:12px;}
+  .board{
+    position:relative; width:100%; aspect-ratio:1/1;
+    background:var(--panel);
+    border:4px solid var(--ink); border-radius:20px;
+    box-shadow:var(--shadow); overflow:hidden; touch-action:none;
+  }
+  .board canvas{position:absolute; inset:0; width:100%; height:100%;}
+  .board svg{position:absolute; inset:0; width:100%; height:100%; pointer-events:none;}
+
+  .step-controls{
+    display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+    background:var(--panel); border:3px solid var(--ink); border-radius:16px;
+    padding:10px 14px; box-shadow:var(--shadow);
+  }
+  .step-controls .dots{display:flex; gap:6px; flex:1; justify-content:center; flex-wrap:wrap;}
+  .dot{
+    width:14px;height:14px;border-radius:50%; background:#e6ddc6;
+    border:2px solid var(--ink); cursor:pointer;
+  }
+  .dot.filled{background:var(--coral);}
+  .dot.current{background:var(--sun);}
+  .icon-btn{
+    font-family:'Baloo 2',sans-serif; font-weight:700; font-size:16px;
+    background:var(--sky); color:#fff; border:3px solid var(--ink);
+    border-radius:12px; width:38px; height:38px; cursor:pointer; line-height:1;
+  }
+  .icon-btn:active{transform:translateY(1px);}
+  .play-btn{
+    font-family:'Baloo 2',sans-serif; font-weight:700; font-size:14px;
+    background:var(--coral); color:#fff; border:3px solid var(--ink);
+    border-radius:14px; padding:9px 14px; cursor:pointer; white-space:nowrap;
+  }
+  .play-btn:active{transform:translateY(1px);}
+  .guide-toggle{display:flex; align-items:center; gap:6px; font-weight:700; font-size:13px;}
+
+  .toolbar{
+    background:var(--panel); border:3px solid var(--ink); border-radius:16px;
+    padding:14px; box-shadow:var(--shadow);
+    display:flex; flex-direction:column; gap:14px;
+  }
+  .toolbar h3{margin:0; font-family:'Baloo 2',sans-serif; font-size:15px;}
+  .swatches{display:grid; grid-template-columns:repeat(4,1fr); gap:8px;}
+  .swatch{
+    width:100%; aspect-ratio:1/1; border-radius:50%; border:3px solid var(--ink);
+    cursor:pointer; padding:0;
+  }
+  .swatch.selected{outline:3px solid var(--ink); outline-offset:2px;}
+  .toolbar label{font-size:13px; font-weight:800;}
+  .toolbar input[type=range]{width:100%;}
+  .tool-btn{
+    font-family:'Baloo 2',sans-serif; font-weight:700; font-size:14px;
+    background:var(--paper); color:var(--ink); border:3px solid var(--ink);
+    border-radius:12px; padding:9px; cursor:pointer;
+  }
+  .tool-btn.active{background:var(--leaf); color:#fff;}
+  .tool-btn:active{transform:translateY(1px);}
+  .save-btn{background:var(--sun);}
+  .clear-btn{background:#FF8C7A;}
+
+  .toast{
+    position:fixed; left:50%; bottom:24px; transform:translateX(-50%) translateY(20px);
+    background:var(--ink); color:#fff; font-family:'Baloo 2',sans-serif; font-weight:700;
+    padding:10px 18px; border-radius:12px; opacity:0; pointer-events:none;
+    transition:opacity .25s ease, transform .25s ease; z-index:50;
+  }
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>✏️ Dibujá Conmigo 🎨</h1>
+    <p>Elegí un dibujo y aprendé a hacerlo, paso a paso</p>
+  </header>
+  <div class="crayon-stripe"></div>
+
+  <div class="filters">
+    <div class="filter-row" id="category-filters"></div>
+    <div class="filter-row" id="difficulty-filters"></div>
+  </div>
+
+  <nav class="gallery" id="gallery"></nav>
+
+  <main class="workspace">
+    <section class="canvas-wrap">
+      <div class="board" id="board">
+        <canvas id="draw-canvas"></canvas>
+        <svg id="guide-svg" viewBox="0 0 400 400"></svg>
+      </div>
+      <div class="step-controls">
+        <button class="icon-btn" id="prev-step" title="Paso anterior">‹</button>
+        <div class="dots" id="step-dots"></div>
+        <button class="icon-btn" id="next-step" title="Siguiente paso">›</button>
+      </div>
+      <div class="step-controls">
+        <button class="play-btn" id="play-btn">▶ Ver cómo se dibuja</button>
+        <label class="guide-toggle"><input type="checkbox" id="guide-toggle" checked> Mostrar guía</label>
+      </div>
+    </section>
+
+    <aside class="toolbar">
+      <div>
+        <h3>Colores</h3>
+        <div class="swatches" id="colors"></div>
+      </div>
+      <div>
+        <label for="brush-size">Grosor del pincel</label>
+        <input type="range" id="brush-size" min="2" max="28" value="7">
+      </div>
+      <button class="tool-btn" id="eraser-btn">🧼 Goma</button>
+      <button class="tool-btn" id="undo-btn">↩ Deshacer</button>
+      <button class="tool-btn clear-btn" id="clear-btn">🗑 Borrar todo</button>
+      <button class="tool-btn save-btn" id="save-btn">⬇ Guardar dibujo</button>
+    </aside>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------- Categories & difficulty ---------- */
+  const CATEGORIES = [
+    { id:"todos", name:"Todos", emoji:"🎨" },
+    { id:"animales", name:"Animales", emoji:"🐾" },
+    { id:"naturaleza", name:"Naturaleza", emoji:"🌿" },
+    { id:"vehiculos", name:"Vehículos", emoji:"🚗" },
+    { id:"divertidas", name:"Cosas Divertidas", emoji:"🎁" },
+    { id:"fantasia", name:"Fantasía", emoji:"✨" }
+  ];
+  const DIFFICULTIES = [
+    { id:"todos", name:"Todas las dificultades" },
+    { id:"facil", name:"⭐ Fácil" },
+    { id:"medio", name:"⭐⭐ Medio" },
+    { id:"dificil", name:"⭐⭐⭐ Difícil" }
+  ];
+
+  /* ---------- Tutorial data ---------- */
+  const VB = "0 0 400 400";
+  const TUTORIALS = [
+    { id:"gato", name:"Gato", emoji:"🐱", category:"animales", difficulty:"facil", steps:[
+        { d:"M280,200 A80,80 0 1,1 120,200 A80,80 0 1,1 280,200" },
+        { d:"M140,140 L120,70 L175,120 Z M260,140 L280,70 L225,120 Z" },
+        { d:"M183,190 a8,8 0 1,0 -16,0 a8,8 0 1,0 16,0 M233,190 a8,8 0 1,0 -16,0 a8,8 0 1,0 16,0" },
+        { d:"M192,205 L208,205 L200,218 Z M200,218 Q190,230 178,222 M200,218 Q210,230 222,222" },
+        { d:"M160,210 L100,200 M160,218 L100,218 M160,226 L100,236 M240,210 L300,200 M240,218 L300,218 M240,226 L300,236" }
+      ]},
+    { id:"pez", name:"Pez", emoji:"🐟", category:"animales", difficulty:"facil", steps:[
+        { d:"M300,200 A100,60 0 1,1 100,200 A100,60 0 1,1 300,200" },
+        { d:"M100,200 L50,170 L50,230 Z" },
+        { d:"M263,190 a6,6 0 1,0 -12,0 a6,6 0 1,0 12,0" },
+        { d:"M200,145 Q220,110 240,145 M200,255 Q220,290 240,255" },
+        { d:"M150,170 Q160,200 150,230 M180,165 Q190,200 180,235" }
+      ]},
+    { id:"pajaro", name:"Pájaro", emoji:"🐦", category:"animales", difficulty:"facil", steps:[
+        { d:"M280,210 A70,50 0 1,1 140,210 A70,50 0 1,1 280,210" },
+        { d:"M200,155 a35,35 0 1,0 -70,0 a35,35 0 1,0 70,0" },
+        { d:"M135,150 L100,160 L135,170 Z M180,145 a5,5 0 1,0 10,0 a5,5 0 1,0 -10,0" },
+        { d:"M220,200 Q250,180 260,220 Q230,225 220,200 M280,205 L320,190 M280,215 L322,215 M280,225 L318,238" }
+      ]},
+    { id:"conejo", name:"Conejo", emoji:"🐰", category:"animales", difficulty:"facil", steps:[
+        { d:"M260,220 A60,60 0 1,1 140,220 A60,60 0 1,1 260,220" },
+        { d:"M180,165 Q160,90 178,55 Q196,90 186,165 Z M220,165 Q240,90 222,55 Q204,90 214,165 Z" },
+        { d:"M180,215 a6,6 0 1,0 12,0 a6,6 0 1,0 -12,0 M208,215 a6,6 0 1,0 12,0 a6,6 0 1,0 -12,0 M194,232 L206,232 L200,242 Z" },
+        { d:"M270,300 A70,60 0 1,1 130,300 A70,60 0 1,1 270,300" }
+      ]},
+    { id:"perro", name:"Perro", emoji:"🐶", category:"animales", difficulty:"medio", steps:[
+        { d:"M270,190 A70,70 0 1,1 130,190 A70,70 0 1,1 270,190" },
+        { d:"M140,160 Q100,190 120,250 Q150,230 150,170 Z M260,160 Q300,190 280,250 Q250,230 250,170 Z" },
+        { d:"M175,180 a7,7 0 1,0 14,0 a7,7 0 1,0 -14,0 M211,180 a7,7 0 1,0 14,0 a7,7 0 1,0 -14,0 M188,205 L212,205 L200,220 Z" },
+        { d:"M200,220 Q185,235 170,225 M200,220 Q215,235 230,225 M195,228 L195,245 Q200,250 205,245 L205,228 Z" },
+        { d:"M260,340 A60,50 0 1,1 140,340 A60,50 0 1,1 260,340 M160,340 L160,370 M180,340 L180,370 M220,340 L220,370 M240,340 L240,370" }
+      ]},
+    { id:"tortuga", name:"Tortuga", emoji:"🐢", category:"animales", difficulty:"medio", steps:[
+        { d:"M280,220 A80,60 0 1,1 120,220 A80,60 0 1,1 280,220" },
+        { d:"M160,190 L240,190 M160,250 L240,250 M180,170 L180,270 M220,170 L220,270" },
+        { d:"M150,270 L130,300 M190,280 L185,315 M230,280 L235,315 M270,265 L295,290 M300,220 a20,20 0 1,0 40,0 a20,20 0 1,0 -40,0" },
+        { d:"M330,215 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0 M120,220 L95,225 L120,232 Z" }
+      ]},
+    { id:"mariposa", name:"Mariposa", emoji:"🦋", category:"animales", difficulty:"medio", steps:[
+        { d:"M195,140 Q200,135 205,140 L205,260 Q200,265 195,260 Z" },
+        { d:"M195,180 Q120,140 90,190 Q120,230 195,200 Z M205,180 Q280,140 310,190 Q280,230 205,200 Z" },
+        { d:"M195,205 Q140,230 130,270 Q170,275 195,235 Z M205,205 Q260,230 270,270 Q230,275 205,235 Z" },
+        { d:"M195,142 Q180,120 170,105 M205,142 Q220,120 230,105 M130,180 a6,6 0 1,0 12,0 a6,6 0 1,0 -12,0 M270,180 a6,6 0 1,0 12,0 a6,6 0 1,0 -12,0" }
+      ]},
+    { id:"pulpo", name:"Pulpo", emoji:"🐙", category:"animales", difficulty:"medio", steps:[
+        { d:"M130,210 A70,70 0 1,1 270,210 Z" },
+        { d:"M175,195 a8,8 0 1,0 16,0 a8,8 0 1,0 -16,0 M225,195 a8,8 0 1,0 16,0 a8,8 0 1,0 -16,0" },
+        { d:"M150,210 Q140,260 120,290 M175,210 Q170,270 150,310 M200,210 Q200,280 200,320 M225,210 Q230,270 250,310 M250,210 Q260,260 280,290 M130,205 Q100,240 90,270" }
+      ]},
+    { id:"oso", name:"Oso", emoji:"🐻", category:"animales", difficulty:"dificil", steps:[
+        { d:"M275,200 A75,75 0 1,1 125,200 A75,75 0 1,1 275,200" },
+        { d:"M175,140 a25,25 0 1,0 -50,0 a25,25 0 1,0 50,0 M275,140 a25,25 0 1,0 -50,0 a25,25 0 1,0 50,0" },
+        { d:"M235,225 A35,25 0 1,1 165,225 A35,25 0 1,1 235,225 M177,190 a7,7 0 1,0 -14,0 a7,7 0 1,0 14,0 M237,190 a7,7 0 1,0 -14,0 a7,7 0 1,0 14,0" },
+        { d:"M190,215 L210,215 L200,225 Z M200,225 Q190,235 178,228 M200,225 Q210,235 222,228" },
+        { d:"M270,340 A75,60 0 1,1 130,340 A75,60 0 1,1 270,340 M140,320 Q110,330 115,360 M260,320 Q290,330 285,360" }
+      ]},
+    { id:"elefante", name:"Elefante", emoji:"🐘", category:"animales", difficulty:"dificil", steps:[
+        { d:"M290,230 A90,70 0 1,1 110,230 A90,70 0 1,1 290,230" },
+        { d:"M140,180 Q80,160 70,220 Q80,270 140,250 Z" },
+        { d:"M175,240 Q150,270 160,300 Q170,330 200,335" },
+        { d:"M210,215 a6,6 0 1,0 12,0 a6,6 0 1,0 -12,0 M150,290 L150,330 L170,330 L170,290 M190,295 L190,335 L210,335 L210,295 M230,295 L230,335 L250,335 L250,295 M260,290 L260,330 L280,330 L280,290" },
+        { d:"M290,260 Q320,270 310,300 Q305,310 300,300 M195,265 Q205,280 195,295" }
+      ]},
+    { id:"sol", name:"Sol", emoji:"☀️", category:"naturaleza", difficulty:"facil", steps:[
+        { d:"M255,190 A55,55 0 1,1 145,190 A55,55 0 1,1 255,190" },
+        { d:"M200,120 L200,90 M200,260 L200,290 M130,190 L100,190 M270,190 L300,190 M150,140 L128,118 M250,140 L272,118 M150,240 L128,262 M250,240 L272,262" }
+      ]},
+    { id:"flor", name:"Flor", emoji:"🌸", category:"naturaleza", difficulty:"facil", steps:[
+        { d:"M215,190 A15,15 0 1,1 185,190 A15,15 0 1,1 215,190" },
+        { d:"M200,175 Q170,140 200,105 Q230,140 200,175 Z M200,205 Q170,240 200,275 Q230,240 200,205 Z M215,190 Q250,160 285,190 Q250,220 215,190 Z M185,190 Q150,160 115,190 Q150,220 185,190 Z" },
+        { d:"M200,275 L200,340" },
+        { d:"M200,300 Q170,290 160,310 Q180,320 200,305 Z M200,315 Q230,305 240,325 Q220,335 200,320 Z" }
+      ]},
+    { id:"arbol", name:"Árbol", emoji:"🌳", category:"naturaleza", difficulty:"facil", steps:[
+        { d:"M185,260 L215,260 L215,350 L185,350 Z" },
+        { d:"M275,190 A75,75 0 1,1 125,190 A75,75 0 1,1 275,190" },
+        { d:"M160,170 a10,10 0 1,0 20,0 a10,10 0 1,0 -20,0 M230,200 a10,10 0 1,0 20,0 a10,10 0 1,0 -20,0 M190,150 a10,10 0 1,0 20,0 a10,10 0 1,0 -20,0" }
+      ]},
+    { id:"arcoiris", name:"Arcoíris", emoji:"🌈", category:"naturaleza", difficulty:"facil", steps:[
+        { d:"M80,300 A120,120 0 0,1 320,300" },
+        { d:"M105,300 A95,95 0 0,1 295,300" },
+        { d:"M130,300 A70,70 0 0,1 270,300" },
+        { d:"M155,300 A45,45 0 0,1 245,300 M60,300 a20,14 0 1,0 40,0 a20,14 0 1,0 -40,0 M300,300 a20,14 0 1,0 40,0 a20,14 0 1,0 -40,0" }
+      ]},
+    { id:"nube", name:"Nube y Lluvia", emoji:"🌧️", category:"naturaleza", difficulty:"facil", steps:[
+        { d:"M130,230 a40,40 0 1,1 80,-20 a35,35 0 1,1 70,10 a35,35 0 1,1 -10,55 L140,275 a35,35 0 1,1 -10,-45 Z" },
+        { d:"M160,290 L150,320 M200,290 L190,320 M240,290 L230,320 M180,300 L172,330 M220,300 L212,330" }
+      ]},
+    { id:"hongo", name:"Hongo", emoji:"🍄", category:"naturaleza", difficulty:"facil", steps:[
+        { d:"M280,200 A80,60 0 1,1 120,200 Z" },
+        { d:"M175,200 L225,200 L225,300 Q225,320 200,320 Q175,320 175,300 Z" },
+        { d:"M150,175 a12,12 0 1,0 24,0 a12,12 0 1,0 -24,0 M250,180 a10,10 0 1,0 20,0 a10,10 0 1,0 -20,0 M200,155 a10,10 0 1,0 20,0 a10,10 0 1,0 -20,0" }
+      ]},
+    { id:"montana", name:"Montaña", emoji:"⛰️", category:"naturaleza", difficulty:"medio", steps:[
+        { d:"M60,320 L160,150 L260,320 Z M180,320 L280,180 L340,320 Z" },
+        { d:"M140,190 L160,150 L180,190 Z M255,215 L280,180 L305,215 Z" },
+        { d:"M330,90 a25,25 0 1,0 -50,0 a25,25 0 1,0 50,0 M70,300 Q60,280 75,270 Q90,280 80,300 Z" }
+      ]},
+    { id:"auto", name:"Auto", emoji:"🚗", category:"vehiculos", difficulty:"facil", steps:[
+        { d:"M90,240 L90,210 Q90,195 110,195 L160,195 L185,165 L255,165 L280,195 L310,195 Q330,195 330,210 L330,240 Z" },
+        { d:"M140,255 a30,30 0 1,0 -60,0 a30,30 0 1,0 60,0 M340,255 a30,30 0 1,0 -60,0 a30,30 0 1,0 60,0" },
+        { d:"M175,175 L165,195 L245,195 L255,175 Z M205,175 L205,195" },
+        { d:"M328,215 a8,8 0 1,0 -16,0 a8,8 0 1,0 16,0 M200,195 L200,240" }
+      ]},
+    { id:"cohete", name:"Cohete", emoji:"🚀", category:"vehiculos", difficulty:"medio", steps:[
+        { d:"M170,300 L170,160 L230,160 L230,300 Z" },
+        { d:"M170,160 Q200,70 230,160 Z" },
+        { d:"M170,260 L130,310 L170,300 Z M230,260 L270,310 L230,300 Z" },
+        { d:"M218,200 a18,18 0 1,0 -36,0 a18,18 0 1,0 36,0" },
+        { d:"M180,300 Q190,330 175,350 M200,300 Q200,340 200,355 M220,300 Q210,330 225,350" }
+      ]},
+    { id:"barco", name:"Barco", emoji:"⛵", category:"vehiculos", difficulty:"medio", steps:[
+        { d:"M100,280 L300,280 L270,320 L130,320 Z" },
+        { d:"M200,280 L200,150" },
+        { d:"M200,155 L260,220 L200,220 Z M200,160 L150,215 L200,215 Z" },
+        { d:"M60,330 Q90,315 120,330 Q150,345 180,330 M180,330 Q210,315 240,330 Q270,345 300,330 M300,330 Q320,320 340,330 M200,150 L225,160 L200,170 Z" }
+      ]},
+    { id:"avion", name:"Avión", emoji:"✈️", category:"vehiculos", difficulty:"medio", steps:[
+        { d:"M100,200 L280,200 Q310,200 310,210 Q310,220 280,220 L100,220 Q90,210 100,200 Z" },
+        { d:"M180,200 L220,130 L240,200 Z M180,220 L220,280 L240,220 Z" },
+        { d:"M100,195 L65,165 L110,195 Z M100,222 L70,240 L110,215 Z" },
+        { d:"M170,210 a8,8 0 1,0 16,0 a8,8 0 1,0 -16,0 M210,210 a8,8 0 1,0 16,0 a8,8 0 1,0 -16,0 M250,210 a8,8 0 1,0 16,0 a8,8 0 1,0 -16,0" }
+      ]},
+    { id:"estrella", name:"Estrella", emoji:"⭐", category:"divertidas", difficulty:"facil", steps:[
+        { d:"M200,90 L227,155 L297,155 L241,196 L262,264 L200,222 L138,264 L159,196 L103,155 L173,155 Z" },
+        { d:"M330,100 L330,130 M315,115 L345,115 M70,280 L70,300 M60,290 L80,290" }
+      ]},
+    { id:"corazon", name:"Corazón", emoji:"❤️", category:"divertidas", difficulty:"facil", steps:[
+        { d:"M200,300 C120,240 90,190 90,150 C90,110 130,90 160,100 C180,107 195,125 200,140 C205,125 220,107 240,100 C270,90 310,110 310,150 C310,190 280,240 200,300 Z" },
+        { d:"M140,150 Q150,130 170,125" }
+      ]},
+    { id:"globo", name:"Globo", emoji:"🎈", category:"divertidas", difficulty:"facil", steps:[
+        { d:"M255,180 A65,75 0 1,1 145,180 A65,75 0 1,1 255,180" },
+        { d:"M192,253 L208,253 L200,265 Z M200,265 Q210,290 195,310 Q180,330 195,350" },
+        { d:"M165,150 Q160,135 175,130 Q185,140 178,155 Z" }
+      ]},
+    { id:"regalo", name:"Regalo", emoji:"🎁", category:"divertidas", difficulty:"facil", steps:[
+        { d:"M120,200 L280,200 L280,320 L120,320 Z" },
+        { d:"M185,200 L185,320 M120,245 L280,245" },
+        { d:"M200,200 Q160,160 140,180 Q150,205 200,200 Z M200,200 Q240,160 260,180 Q250,205 200,200 Z" }
+      ]},
+    { id:"casa", name:"Casa", emoji:"🏠", category:"divertidas", difficulty:"medio", steps:[
+        { d:"M120,220 L280,220 L280,340 L120,340 Z" },
+        { d:"M100,220 L200,130 L300,220 Z" },
+        { d:"M180,260 L220,260 L220,340 L180,340 Z" },
+        { d:"M135,240 L160,240 L160,265 L135,265 Z M240,240 L265,240 L265,265 L240,265 Z" },
+        { d:"M250,150 L270,150 L270,190 L250,190 Z M270,145 Q280,130 270,115 Q260,100 270,85" }
+      ]},
+    { id:"torta", name:"Torta de Cumpleaños", emoji:"🎂", category:"divertidas", difficulty:"medio", steps:[
+        { d:"M110,280 L290,280 L290,330 L110,330 Z" },
+        { d:"M150,230 L250,230 L250,280 L150,280 Z" },
+        { d:"M170,230 L170,205 M200,230 L200,200 M230,230 L230,205" },
+        { d:"M170,200 Q165,190 170,182 Q175,190 170,200 Z M200,195 Q195,185 200,177 Q205,185 200,195 Z M230,200 Q225,190 230,182 Q235,190 230,200 Z M130,300 a6,6 0 1,0 12,0 a6,6 0 1,0 -12,0 M270,300 a6,6 0 1,0 12,0 a6,6 0 1,0 -12,0 M170,255 a6,6 0 1,0 12,0 a6,6 0 1,0 -12,0 M230,255 a6,6 0 1,0 12,0 a6,6 0 1,0 -12,0" }
+      ]},
+    { id:"fantasma", name:"Fantasma", emoji:"👻", category:"fantasia", difficulty:"facil", steps:[
+        { d:"M130,230 Q130,120 200,120 Q270,120 270,230 L270,285 L245,265 L220,285 L195,265 L170,285 L145,265 L130,285 Z" },
+        { d:"M190,195 a10,10 0 1,0 -20,0 a10,10 0 1,0 20,0 M230,195 a10,10 0 1,0 -20,0 a10,10 0 1,0 20,0 M185,225 Q200,245 215,225" },
+        { d:"M130,240 Q100,250 105,280 M270,240 Q300,250 295,280" }
+      ]},
+    { id:"robot", name:"Robot", emoji:"🤖", category:"fantasia", difficulty:"medio", steps:[
+        { d:"M150,140 L250,140 Q265,140 265,155 L265,220 Q265,235 250,235 L150,235 Q135,235 135,220 L135,155 Q135,140 150,140 Z" },
+        { d:"M200,140 L200,110 M190,110 L210,110 M165,175 L185,175 L185,195 L165,195 Z M215,175 L235,175 L235,195 L215,195 Z" },
+        { d:"M150,235 L250,235 L250,320 L150,320 Z M220,270 a20,20 0 1,0 -40,0 a20,20 0 1,0 40,0" },
+        { d:"M150,250 L110,250 L110,280 L130,280 L130,250 M250,250 L290,250 L290,280 L270,280 L270,250 M170,320 L170,360 L190,360 L190,320 M210,320 L210,360 L230,360 L230,320" },
+        { d:"M160,210 L180,210 M190,210 L210,210 M220,210 L240,210" }
+      ]},
+    { id:"dinosaurio", name:"Dinosaurio", emoji:"🦕", category:"fantasia", difficulty:"dificil", steps:[
+        { d:"M290,240 A80,55 0 1,1 130,240 A80,55 0 1,1 290,240" },
+        { d:"M170,200 Q120,150 90,110 Q80,95 95,85 Q115,80 130,100 Q160,140 190,190 M110,95 a15,15 0 1,0 -30,0 a15,15 0 1,0 30,0" },
+        { d:"M270,220 Q340,210 380,180" },
+        { d:"M160,290 L160,330 L180,330 L180,290 M230,290 L230,330 L250,330 L250,290 M190,295 L190,335 L210,335 L210,295 M255,295 L255,335 L275,335 L275,295" },
+        { d:"M100,90 a5,5 0 1,0 10,0 a5,5 0 1,0 -10,0 M170,210 a8,8 0 1,0 16,0 a8,8 0 1,0 -16,0 M210,210 a8,8 0 1,0 16,0 a8,8 0 1,0 -16,0 M250,215 a8,8 0 1,0 16,0 a8,8 0 1,0 -16,0" }
+      ]},
+    { id:"castillo", name:"Castillo", emoji:"🏰", category:"fantasia", difficulty:"dificil", steps:[
+        { d:"M110,220 L290,220 L290,340 L110,340 Z" },
+        { d:"M90,180 L140,180 L140,340 L90,340 Z M260,180 L310,180 L310,340 L260,340 Z" },
+        { d:"M100,220 L100,200 L120,200 L120,220 M150,220 L150,200 L170,200 L170,220 M190,220 L190,200 L210,200 L210,220 M230,220 L230,200 L250,200 L250,220 M270,220 L270,200 L290,200 L290,220 M90,180 L115,150 L140,180 Z M260,180 L285,150 L310,180 Z" },
+        { d:"M180,340 L180,280 Q180,260 200,260 Q220,260 220,280 L220,340 Z M105,220 L125,220 L125,240 L105,240 Z M275,220 L295,220 L295,240 L275,240 Z" },
+        { d:"M115,150 L115,130 L135,140 L115,150 Z M285,150 L285,130 L305,140 L285,150 Z" }
+      ]}
+  ];
+
+  const COLORS = ["#2B2B2B","#FF6B4A","#FFC93C","#4EA8DE","#4CB963","#B79CED","#8B5A2B","#FFFFFF"];
+
+  /* ---------- State ---------- */
+  let currentTutId = TUTORIALS[0].id;
+  let activeCategory = "todos";
+  let activeDifficulty = "todos";
+  let drawnUpTo = 0;
+  let isPlaying = false;
+  let currentColor = COLORS[0];
+  let isEraser = false;
+  let brushSize = 7;
+  let history = [];
+  let drawing = false, lastX = 0, lastY = 0;
+
+  function getCurrentTutorial(){
+    return TUTORIALS.find(t => t.id === currentTutId);
+  }
+
+  /* ---------- Elements ---------- */
+  const catFiltersEl = document.getElementById("category-filters");
+  const diffFiltersEl = document.getElementById("difficulty-filters");
+  const galleryEl = document.getElementById("gallery");
+  const guideSvg = document.getElementById("guide-svg");
+  const canvas = document.getElementById("draw-canvas");
+  const ctx = canvas.getContext("2d");
+  const board = document.getElementById("board");
+  const dotsEl = document.getElementById("step-dots");
+  const playBtn = document.getElementById("play-btn");
+  const guideToggle = document.getElementById("guide-toggle");
+  const colorsEl = document.getElementById("colors");
+  const toastEl = document.getElementById("toast");
+
+  /* ---------- Toast ---------- */
+  let toastTimer;
+  function toast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(()=>toastEl.classList.remove("show"), 1600);
+  }
+
+  /* ---------- Canvas sizing ---------- */
+  function fitCanvas(){
+    const rect = board.getBoundingClientRect();
+    const ratio = window.devicePixelRatio || 1;
+    const prev = document.createElement("canvas");
+    prev.width = canvas.width; prev.height = canvas.height;
+    const pctx = prev.getContext("2d");
+    if(canvas.width>0) pctx.drawImage(canvas,0,0);
+    canvas.width = rect.width * ratio;
+    canvas.height = rect.height * ratio;
+    ctx.setTransform(ratio,0,0,ratio,0,0);
+    ctx.lineCap = "round"; ctx.lineJoin = "round";
+    if(prev.width>0){
+      ctx.drawImage(prev,0,0,prev.width,prev.height,0,0,rect.width,rect.height);
+    }
+  }
+  window.addEventListener("resize", fitCanvas);
+
+  /* ---------- Filters ---------- */
+  function renderFilters(){
+    catFiltersEl.innerHTML = "";
+    CATEGORIES.forEach(c=>{
+      const chip = document.createElement("button");
+      chip.className = "chip" + (c.id===activeCategory ? " active":"");
+      chip.textContent = c.emoji + " " + c.name;
+      chip.addEventListener("click", ()=>{ activeCategory = c.id; renderFilters(); renderGallery(); });
+      catFiltersEl.appendChild(chip);
+    });
+    diffFiltersEl.innerHTML = "";
+    DIFFICULTIES.forEach(d=>{
+      const chip = document.createElement("button");
+      chip.className = "chip diff-" + d.id + (d.id===activeDifficulty ? " active":"");
+      chip.textContent = d.name;
+      chip.addEventListener("click", ()=>{ activeDifficulty = d.id; renderFilters(); renderGallery(); });
+      diffFiltersEl.appendChild(chip);
+    });
+  }
+
+  /* ---------- Gallery ---------- */
+  function thumbSVG(tut){
+    const paths = tut.steps.map(s=>`<path d="${s.d}" fill="none" stroke="#2B2B2B" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>`).join("");
+    return `<svg viewBox="${VB}">${paths}</svg>`;
+  }
+  function diffDots(diff){
+    const levels = { facil:1, medio:2, dificil:3 };
+    const n = levels[diff] || 1;
+    let html = "";
+    for(let i=1;i<=3;i++){
+      html += `<i class="${i<=n ? "on "+diff : ""}"></i>`;
+    }
+    return `<div class="diff-dots">${html}</div>`;
+  }
+  function renderGallery(){
+    galleryEl.innerHTML = "";
+    const filtered = TUTORIALS.filter(t =>
+      (activeCategory==="todos" || t.category===activeCategory) &&
+      (activeDifficulty==="todos" || t.difficulty===activeDifficulty)
+    );
+    if(filtered.length === 0){
+      galleryEl.innerHTML = '<div class="empty-msg">No hay dibujos con esos filtros. ¡Probá otra combinación!</div>';
+      return;
+    }
+    filtered.forEach(tut=>{
+      const card = document.createElement("div");
+      card.className = "tut-card" + (tut.id===currentTutId ? " active" : "");
+      card.innerHTML = thumbSVG(tut) + `<span class="tname">${tut.emoji} ${tut.name}</span>` + diffDots(tut.difficulty);
+      card.addEventListener("click", ()=> selectTutorial(tut.id));
+      galleryEl.appendChild(card);
+    });
+  }
+
+  /* ---------- Guide rendering ---------- */
+  function buildGuide(){
+    guideSvg.innerHTML = "";
+    const tut = getCurrentTutorial();
+    tut.steps.forEach((s)=>{
+      const p = document.createElementNS("http://www.w3.org/2000/svg","path");
+      p.setAttribute("d", s.d);
+      p.setAttribute("fill","none");
+      p.setAttribute("stroke", "#2B2B2B");
+      p.setAttribute("stroke-width","7");
+      p.setAttribute("stroke-linecap","round");
+      p.setAttribute("stroke-linejoin","round");
+      p.setAttribute("opacity","0.55");
+      guideSvg.appendChild(p);
+    });
+    renderStatic();
+  }
+
+  function pathLength(p){
+    try{ return p.getTotalLength(); }catch(e){ return 400; }
+  }
+
+  function renderStatic(){
+    const paths = guideSvg.querySelectorAll("path");
+    paths.forEach((p,i)=>{
+      const len = pathLength(p);
+      p.style.transition = "none";
+      p.setAttribute("stroke-dasharray", len);
+      if(i < drawnUpTo){
+        p.setAttribute("stroke-dashoffset", 0);
+        p.setAttribute("stroke", i === drawnUpTo-1 ? "#FF6B4A" : "#2B2B2B");
+      } else {
+        p.setAttribute("stroke-dashoffset", len);
+      }
+    });
+    renderDots();
+  }
+
+  function renderDots(){
+    const tut = getCurrentTutorial();
+    dotsEl.innerHTML = "";
+    tut.steps.forEach((_,i)=>{
+      const d = document.createElement("div");
+      d.className = "dot" + (i < drawnUpTo ? (i===drawnUpTo-1 ? " current":" filled") : "");
+      d.title = "Paso " + (i+1);
+      d.addEventListener("click", ()=>{ stopPlaying(); drawnUpTo = i+1; renderStatic(); });
+      dotsEl.appendChild(d);
+    });
+  }
+
+  function animateStep(i, cb){
+    const paths = guideSvg.querySelectorAll("path");
+    const p = paths[i];
+    const len = pathLength(p);
+    const duration = Math.min(2.4, Math.max(0.6, len/260));
+    p.setAttribute("stroke", "#FF6B4A");
+    p.setAttribute("stroke-dasharray", len);
+    p.style.transition = "none";
+    p.setAttribute("stroke-dashoffset", len);
+    p.getBoundingClientRect();
+    p.style.transition = `stroke-dashoffset ${duration}s linear`;
+    requestAnimationFrame(()=>{ p.setAttribute("stroke-dashoffset", 0); });
+    setTimeout(()=>{
+      p.setAttribute("stroke","#2B2B2B");
+      cb && cb();
+    }, duration*1000 + 60);
+  }
+
+  function playAll(){
+    const tut = getCurrentTutorial();
+    isPlaying = true;
+    playBtn.textContent = "⏸ Pausar";
+    drawnUpTo = 0;
+    renderStatic();
+    let i = 0;
+    function step(){
+      if(!isPlaying || i >= tut.steps.length){
+        isPlaying = false;
+        playBtn.textContent = "▶ Ver cómo se dibuja";
+        return;
+      }
+      animateStep(i, ()=>{
+        i++;
+        drawnUpTo = i;
+        renderDots();
+        if(!isPlaying) return;
+        setTimeout(step, 350);
+      });
+    }
+    step();
+  }
+
+  function stopPlaying(){
+    isPlaying = false;
+    playBtn.textContent = "▶ Ver cómo se dibuja";
+  }
+
+  playBtn.addEventListener("click", ()=>{
+    if(isPlaying){ stopPlaying(); }
+    else { playAll(); }
+  });
+
+  document.getElementById("prev-step").addEventListener("click", ()=>{
+    stopPlaying();
+    drawnUpTo = Math.max(0, drawnUpTo-1);
+    renderStatic();
+  });
+  document.getElementById("next-step").addEventListener("click", ()=>{
+    stopPlaying();
+    const max = getCurrentTutorial().steps.length;
+    drawnUpTo = Math.min(max, drawnUpTo+1);
+    renderStatic();
+  });
+  guideToggle.addEventListener("change", ()=>{
+    guideSvg.style.display = guideToggle.checked ? "block" : "none";
+  });
+
+  function selectTutorial(id){
+    stopPlaying();
+    currentTutId = id;
+    drawnUpTo = 0;
+    renderGallery();
+    buildGuide();
+    clearCanvas(false);
+    toast("Nuevo dibujo: " + getCurrentTutorial().name);
+  }
+
+  /* ---------- Drawing tools ---------- */
+  function renderColors(){
+    colorsEl.innerHTML = "";
+    COLORS.forEach((c)=>{
+      const b = document.createElement("button");
+      b.className = "swatch" + (c===currentColor && !isEraser ? " selected" : "");
+      b.style.background = c;
+      if(c === "#FFFFFF") b.style.boxShadow = "inset 0 0 0 2px #ddd";
+      b.addEventListener("click", ()=>{
+        currentColor = c; isEraser = false;
+        document.getElementById("eraser-btn").classList.remove("active");
+        renderColors();
+      });
+      colorsEl.appendChild(b);
+    });
+  }
+
+  document.getElementById("brush-size").addEventListener("input", (e)=>{
+    brushSize = parseInt(e.target.value,10);
+  });
+
+  document.getElementById("eraser-btn").addEventListener("click", (e)=>{
+    isEraser = !isEraser;
+    e.target.classList.toggle("active", isEraser);
+    renderColors();
+  });
+
+  function pointerPos(e){
+    const rect = canvas.getBoundingClientRect();
+    return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+  }
+
+  function startDraw(e){
+    drawing = true;
+    const pos = pointerPos(e);
+    lastX = pos.x; lastY = pos.y;
+    ctx.beginPath();
+    ctx.arc(pos.x,pos.y, brushSize/2, 0, Math.PI*2);
+    ctx.fillStyle = isEraser ? "#000000" : currentColor;
+    if(isEraser){ ctx.globalCompositeOperation = "destination-out"; }
+    else { ctx.globalCompositeOperation = "source-over"; }
+    ctx.fill();
+  }
+  function moveDraw(e){
+    if(!drawing) return;
+    const pos = pointerPos(e);
+    ctx.globalCompositeOperation = isEraser ? "destination-out" : "source-over";
+    ctx.strokeStyle = currentColor;
+    ctx.lineWidth = brushSize;
+    ctx.beginPath();
+    ctx.moveTo(lastX,lastY);
+    ctx.lineTo(pos.x,pos.y);
+    ctx.stroke();
+    lastX = pos.x; lastY = pos.y;
+  }
+  function endDraw(){
+    if(!drawing) return;
+    drawing = false;
+    pushHistory();
+  }
+
+  canvas.addEventListener("pointerdown", (e)=>{ canvas.setPointerCapture(e.pointerId); startDraw(e); });
+  canvas.addEventListener("pointermove", moveDraw);
+  canvas.addEventListener("pointerup", endDraw);
+  canvas.addEventListener("pointercancel", endDraw);
+  canvas.addEventListener("pointerleave", ()=>{ if(drawing) endDraw(); });
+
+  function pushHistory(){
+    try{
+      history.push(canvas.toDataURL());
+      if(history.length > 20) history.shift();
+    }catch(e){}
+  }
+
+  document.getElementById("undo-btn").addEventListener("click", ()=>{
+    if(history.length === 0){ toast("Nada para deshacer"); return; }
+    history.pop();
+    const rect = board.getBoundingClientRect();
+    ctx.clearRect(0,0,rect.width,rect.height);
+    if(history.length){
+      const img = new Image();
+      img.onload = ()=>{ ctx.drawImage(img,0,0,rect.width,rect.height); };
+      img.src = history[history.length-1];
+    }
+  });
+
+  function clearCanvas(showToast){
+    const rect = board.getBoundingClientRect();
+    ctx.clearRect(0,0,rect.width,rect.height);
+    history = [];
+    if(showToast) toast("Lienzo borrado");
+  }
+  document.getElementById("clear-btn").addEventListener("click", ()=>clearCanvas(true));
+
+  document.getElementById("save-btn").addEventListener("click", ()=>{
+    const rect = board.getBoundingClientRect();
+    const out = document.createElement("canvas");
+    out.width = rect.width; out.height = rect.height;
+    const octx = out.getContext("2d");
+    octx.fillStyle = "#FFFBF2";
+    octx.fillRect(0,0,out.width,out.height);
+    octx.drawImage(canvas,0,0,out.width,out.height);
+    const link = document.createElement("a");
+    link.download = getCurrentTutorial().name.toLowerCase() + "-dibujo.png";
+    link.href = out.toDataURL("image/png");
+    link.click();
+    toast("¡Dibujo guardado!");
+  });
+
+  /* ---------- Init ---------- */
+  function init(){
+    fitCanvas();
+    renderFilters();
+    renderGallery();
+    renderColors();
+    buildGuide();
+  }
+  window.addEventListener("load", init);
+  if(document.readyState === "complete") init();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,8 @@
+dist
+node_modules
+
+# index.html is relocated verbatim (legacy markup, byte-for-byte structure)
+# across this migration; never auto-reformatted. Root index.html also serves
+# the live site and must never be touched by tooling.
+/index.html
+app/index.html

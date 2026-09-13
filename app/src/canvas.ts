@@ -14,10 +14,9 @@
  * on-screen bitmap 1:1 with no downscaling and no maximum-dimension cap
  * (spec `drawing-canvas` → PNG Export Resolution Fix).
  *
- * PARITY (Bug 3, fixed in slice 8): `exportPng()` fills the background with
- * `EXPORT_BACKGROUND` (`#FFFBF2`, the board's paper tone), not the board's
- * actual white (`#FFFFFF` / `--panel`). Do not "fix" this here (spec
- * `drawing-canvas` → PNG Export Background).
+ * Slice 8 (Bug 3 fix): `exportPng()` now fills the background with an
+ * opaque `EXPORT_BACKGROUND` (`#FFFFFF`), matching the board's actual panel
+ * color (spec `drawing-canvas` → PNG Export Background Fix).
  *
  * PARITY (non-goals, intentional, never fixed): `pointerleave` ends the
  * stroke only when `drawing` is true, clamping the last point at the canvas
@@ -176,8 +175,8 @@ export function createDrawingCanvas(options: CanvasOptions): DrawingCanvas {
     out.height = canvas.height;
     const octx = out.getContext('2d');
     if (!octx) throw new Error('Unable to acquire 2D context for PNG export');
-    // PARITY (Bug 3, fixed slice 8): fills with the board's paper tone, not
-    // its actual white — see module doc comment above. Do not "fix".
+    // Bug 3 fix (slice 8): opaque board white, matching the on-screen panel
+    // (see module doc comment above).
     octx.fillStyle = EXPORT_BACKGROUND;
     octx.fillRect(0, 0, out.width, out.height);
     octx.drawImage(canvas, 0, 0, out.width, out.height);

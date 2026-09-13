@@ -33,7 +33,7 @@ export const PLAYBACK = {
 
 export const TOAST_MS = 1600;
 
-// PARITY: legacy exports the board's paper tone (--paper), not the board's
-// white (--panel). This is Bug 3, fixed in slice 8. Do not "correct" this
-// value before then — slices 1-7 are a byte-for-byte behavioral port.
-export const EXPORT_BACKGROUND = '#FFFBF2';
+// Bug 3 fix (slice 8): opaque board white (--panel), matching the on-screen
+// board. Legacy exported the paper tone (--paper, #FFFBF2) instead — see
+// canvas.ts's module doc comment for the full PNG Export Background Fix.
+export const EXPORT_BACKGROUND = '#FFFFFF';

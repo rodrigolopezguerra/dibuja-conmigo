@@ -3,9 +3,9 @@
  * `filters`) — see design §1 (I3). Feature modules never import each other;
  * every wire-up happens here (design §2, §11).
  *
- * Slice 4 skeleton: wires toast/filters/gallery/toolbar only. `guide.ts`
- * (slice 5) and `canvas.ts` (slice 6) are not implemented yet — the seams
- * they will plug into are marked with `TODO(slice N)` comments below.
+ * Slice 5: wires toast/filters/gallery/toolbar/guide. `canvas.ts` (slice 6)
+ * is not implemented yet — the seams it will plug into are marked with
+ * `TODO(slice 6)` comments below.
  */
 import '../styles/index.css';
 
@@ -14,6 +14,7 @@ import type { Tutorial } from './types';
 import { TUTORIALS } from './data';
 import { createFilterBar, filterTutorials } from './filters';
 import { createGallery } from './gallery';
+import { createGuide } from './guide';
 import { createToast } from './toast';
 import { createToolbar } from './toolbar';
 
@@ -28,6 +29,12 @@ const el = {
   categoryFilters: requireEl('category-filters', HTMLDivElement),
   difficultyFilters: requireEl('difficulty-filters', HTMLDivElement),
   gallery: requireEl('gallery', HTMLElement),
+  guideSvg: requireEl('guide-svg', SVGSVGElement),
+  stepDots: requireEl('step-dots', HTMLDivElement),
+  playBtn: requireEl('play-btn', HTMLButtonElement),
+  prevStep: requireEl('prev-step', HTMLButtonElement),
+  nextStep: requireEl('next-step', HTMLButtonElement),
+  guideToggle: requireEl('guide-toggle', HTMLInputElement),
   colors: requireEl('colors', HTMLDivElement),
   brushSize: requireEl('brush-size', HTMLInputElement),
   eraserBtn: requireEl('eraser-btn', HTMLButtonElement),
@@ -58,6 +65,15 @@ const filterBar = createFilterBar({
 });
 
 const gallery = createGallery({ root: el.gallery, onSelect: selectTutorial });
+
+const guide = createGuide({
+  svg: el.guideSvg,
+  dots: el.stepDots,
+  playBtn: el.playBtn,
+  prevBtn: el.prevStep,
+  nextBtn: el.nextStep,
+  toggle: el.guideToggle,
+});
 
 // TODO(slice 6): pass `getDrawSettings: toolbar.getDrawSettings` into
 // `createDrawingCanvas`, and wire onUndo/onClear/onSave to the real board.
@@ -90,7 +106,7 @@ function renderGallery(): void {
 function selectTutorial(id: string): void {
   currentTutId = id;
   renderGallery();
-  // TODO(slice 5): guide.load(currentTutorial())
+  guide.load(currentTutorial());
   // TODO(slice 6): board.clear(false)
   toast.show(`Nuevo dibujo: ${currentTutorial().name}`);
 }
@@ -99,7 +115,7 @@ function init(): void {
   filterBar.render(filters);
   renderGallery();
   // TODO(slice 6): board.fit()
-  // TODO(slice 5): guide.load(currentTutorial())
+  guide.load(currentTutorial());
 }
 
 // PARITY: double-init, verbatim (legacy index.html:778-779). Deferred module

@@ -3,15 +3,18 @@
  * `filters`) — see design §1 (I3). Feature modules never import each other;
  * every wire-up happens here (design §2, §11).
  *
- * Slice 5: wires toast/filters/gallery/toolbar/guide. `canvas.ts` (slice 6)
- * is not implemented yet — the seams it will plug into are marked with
- * `TODO(slice 6)` comments below.
+ * Slice 6: wires `canvas.ts` — the app is fully functional end-to-end.
+ * `toolbar` is constructed before `board` and receives lazy `() => board.…`
+ * arrows; `board` receives `toolbar.getDrawSettings` directly. That one lazy
+ * edge is what breaks the mutual reference without either module importing
+ * the other (design §2, §11).
  */
 import '../styles/index.css';
 
 import type { FilterState } from './filters';
 import type { Tutorial } from './types';
 import { TUTORIALS } from './data';
+import { createDrawingCanvas } from './canvas';
 import { createFilterBar, filterTutorials } from './filters';
 import { createGallery } from './gallery';
 import { createGuide } from './guide';
@@ -29,6 +32,8 @@ const el = {
   categoryFilters: requireEl('category-filters', HTMLDivElement),
   difficultyFilters: requireEl('difficulty-filters', HTMLDivElement),
   gallery: requireEl('gallery', HTMLElement),
+  board: requireEl('board', HTMLDivElement),
+  canvas: requireEl('draw-canvas', HTMLCanvasElement),
   guideSvg: requireEl('guide-svg', SVGSVGElement),
   stepDots: requireEl('step-dots', HTMLDivElement),
   playBtn: requireEl('play-btn', HTMLButtonElement),
@@ -75,9 +80,7 @@ const guide = createGuide({
   toggle: el.guideToggle,
 });
 
-// TODO(slice 6): pass `getDrawSettings: toolbar.getDrawSettings` into
-// `createDrawingCanvas`, and wire onUndo/onClear/onSave to the real board.
-createToolbar(
+const toolbar = createToolbar(
   {
     colors: el.colors,
     brushSize: el.brushSize,
@@ -88,16 +91,24 @@ createToolbar(
   },
   {
     onUndo() {
-      // TODO(slice 6): board.undo()
+      board.undo();
     },
     onClear() {
-      // TODO(slice 6): board.clear(true)
+      board.clear(true);
     },
     onSave() {
-      // TODO(slice 6): board.exportPng()
+      board.exportPng();
     },
   },
 );
+
+const board = createDrawingCanvas({
+  canvas: el.canvas,
+  board: el.board,
+  getDrawSettings: toolbar.getDrawSettings,
+  notify: toast.show,
+  getExportName: () => currentTutorial().name,
+});
 
 function renderGallery(): void {
   gallery.render(filterTutorials(TUTORIALS, filters), currentTutId);
@@ -107,14 +118,17 @@ function selectTutorial(id: string): void {
   currentTutId = id;
   renderGallery();
   guide.load(currentTutorial());
-  // TODO(slice 6): board.clear(false)
+  board.clear(false);
   toast.show(`Nuevo dibujo: ${currentTutorial().name}`);
 }
 
+// PARITY: legacy init order — fitCanvas, filters, gallery, colors, guide
+// (index.html:769-775). Colors are already rendered at toolbar
+// construction time (see toolbar.ts's documented accepted deviation).
 function init(): void {
+  board.fit();
   filterBar.render(filters);
   renderGallery();
-  // TODO(slice 6): board.fit()
   guide.load(currentTutorial());
 }
 

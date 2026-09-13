@@ -18,12 +18,21 @@
  * opaque `EXPORT_BACKGROUND` (`#FFFFFF`), matching the board's actual panel
  * color (spec `drawing-canvas` → PNG Export Background Fix).
  *
+ * Slice 8 (Bug 4 fix): `undo()` explicitly resets `globalCompositeOperation`
+ * to `'source-over'` before repainting the restored snapshot. Without this,
+ * an undo performed right after an eraser stroke would repaint in
+ * `destination-out` mode (left set by `startDraw`/`moveDraw` and never
+ * reset elsewhere) and wipe the entire canvas instead of restoring it.
+ *
  * PARITY (non-goals, intentional, never fixed): `pointerleave` ends the
  * stroke only when `drawing` is true, clamping the last point at the canvas
  * edge instead of extrapolating past it (spec `drawing-canvas` → Pointer
  * Input). `moveDraw` sets `strokeStyle = color` even while erasing —
  * `destination-out` ignores RGB entirely, so this is cosmetically odd but
- * functionally correct (spec `drawing-canvas` → Eraser Rendering).
+ * functionally correct (spec `drawing-canvas` → Eraser Rendering). This is
+ * a distinct, cosmetic-only defect from Bug 4 above — Bug 4 is about the
+ * composite op never being RESET after erasing, not about the RGB it's
+ * paired with while active.
  */
 import type { DrawSettings } from './types';
 import { EXPORT_BACKGROUND, HISTORY_LIMIT } from './config';
@@ -152,6 +161,14 @@ export function createDrawingCanvas(options: CanvasOptions): DrawingCanvas {
     if (last !== undefined) {
       const img = new Image();
       img.onload = () => {
+        // Bug 4 fix (slice 8): startDraw/moveDraw leave
+        // globalCompositeOperation set to 'destination-out' while erasing
+        // and nothing else resets it. Without this reset, this drawImage
+        // call would run in destination-out mode and punch itself out,
+        // wiping the canvas instead of restoring the snapshot. Fixed here
+        // (rather than in the eraser's own state machine) so erasing itself
+        // stays untouched.
+        ctx.globalCompositeOperation = 'source-over';
         ctx.drawImage(img, 0, 0, rect.width, rect.height);
       };
       img.src = last;

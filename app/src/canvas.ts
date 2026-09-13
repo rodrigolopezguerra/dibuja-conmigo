@@ -8,12 +8,11 @@
  * stroke event via the injected `getDrawSettings()` callback, so `canvas.ts`
  * and `toolbar.ts` never reference each other (design §2).
  *
- * PARITY (Bug 2, fixed in slice 8): `exportPng()` sizes the output canvas in
- * CSS pixels (`rect.width`/`rect.height`), not device pixels, then downscales
- * the high-res source bitmap into it via `drawImage`. The exported PNG is
- * visibly lower-resolution than the on-screen bitmap at high
- * `devicePixelRatio`. Do not "fix" this here — slices 1-7 are a byte-for-byte
- * behavioral port (spec `drawing-canvas` → PNG Export Sizing).
+ * Slice 8 (Bug 2 fix): `exportPng()` now sizes the output canvas from the
+ * source bitmap's actual device-pixel dimensions (`canvas.width`/
+ * `canvas.height`), not CSS pixels, so the exported PNG matches the
+ * on-screen bitmap 1:1 with no downscaling and no maximum-dimension cap
+ * (spec `drawing-canvas` → PNG Export Resolution Fix).
  *
  * PARITY (Bug 3, fixed in slice 8): `exportPng()` fills the background with
  * `EXPORT_BACKGROUND` (`#FFFBF2`, the board's paper tone), not the board's
@@ -168,12 +167,13 @@ export function createDrawingCanvas(options: CanvasOptions): DrawingCanvas {
   }
 
   function exportPng(): void {
-    const rect = options.board.getBoundingClientRect();
     const out = document.createElement('canvas');
-    // PARITY (Bug 2, fixed slice 8): CSS-pixel sized, not DPR-scaled — see
-    // module doc comment above. Do not "fix".
-    out.width = rect.width;
-    out.height = rect.height;
+    // Bug 2 fix (slice 8): size the export canvas from the source bitmap's
+    // actual device-pixel dimensions (set in fit() as rect * devicePixelRatio),
+    // not CSS pixels. drawImage below then copies 1:1 — no downscaling, no
+    // maximum-dimension cap.
+    out.width = canvas.width;
+    out.height = canvas.height;
     const octx = out.getContext('2d');
     if (!octx) throw new Error('Unable to acquire 2D context for PNG export');
     // PARITY (Bug 3, fixed slice 8): fills with the board's paper tone, not

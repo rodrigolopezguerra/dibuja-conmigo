@@ -1,0 +1,23 @@
+  .toolbar{
+    background:var(--panel); border:3px solid var(--ink); border-radius:16px;
+    padding:14px; box-shadow:var(--shadow);
+    display:flex; flex-direction:column; gap:14px;
+  }
+  .toolbar h3{margin:0; font-family:'Baloo 2',sans-serif; font-size:15px;}
+  .swatches{display:grid; grid-template-columns:repeat(4,1fr); gap:8px;}
+  .swatch{
+    width:100%; aspect-ratio:1/1; border-radius:50%; border:3px solid var(--ink);
+    cursor:pointer; padding:0;
+  }
+  .swatch.selected{outline:3px solid var(--ink); outline-offset:2px;}
+  .toolbar label{font-size:13px; font-weight:800;}
+  .toolbar input[type=range]{width:100%;}
+  .tool-btn{
+    font-family:'Baloo 2',sans-serif; font-weight:700; font-size:14px;
+    background:var(--paper); color:var(--ink); border:3px solid var(--ink);
+    border-radius:12px; padding:9px; cursor:pointer;
+  }
+  .tool-btn.active{background:var(--leaf); color:#fff;}
+  .tool-btn:active{transform:translateY(1px);}
+  .save-btn{background:var(--sun);}
+  .clear-btn{background:#FF8C7A;}

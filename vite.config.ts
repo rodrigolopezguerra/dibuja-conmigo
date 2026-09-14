@@ -1,13 +1,12 @@
 import { defineConfig } from 'vite';
 
-// Phase A (slices 1-6): the app lives under `app/` while the legacy root
-// `index.html` keeps serving the live site. Slice 7b promotes `app/` to the
-// repo root and switches this to phase B (`root` removed, `outDir: 'dist'`).
+// Phase B (post-slice-7b): app/ has been promoted to the repo root, so
+// `root` is no longer needed and `outDir` points at `dist` directly.
+// `base: './'` stays unchanged — it is load-bearing for the custom-domain
+// root deploy (relative asset paths).
 export default defineConfig({
-  root: 'app',
   base: './',
   build: {
-    outDir: '../dist',
-    emptyOutDir: true,
+    outDir: 'dist',
   },
 });

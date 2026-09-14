@@ -2,16 +2,15 @@ dist
 node_modules
 
 # index.html is relocated verbatim (legacy markup, byte-for-byte structure)
-# across this migration; never auto-reformatted. Root index.html also serves
-# the live site and must never be touched by tooling.
+# and now serves the live site directly from the repo root; never
+# auto-reformatted.
 /index.html
-app/index.html
 
-# app/styles/*.css (excluding the test) are relocated verbatim from the
-# legacy inline <style> block (design invariant I5: pure cut-and-paste, no
+# styles/*.css (excluding the test) are relocated verbatim from the legacy
+# inline <style> block (design invariant I5: pure cut-and-paste, no
 # reformatting) — never auto-reformatted, same rationale as index.html above.
-app/styles/tokens.css
-app/styles/base.css
-app/styles/gallery.css
-app/styles/board.css
-app/styles/toolbar.css
+styles/tokens.css
+styles/base.css
+styles/gallery.css
+styles/board.css
+styles/toolbar.css

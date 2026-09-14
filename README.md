@@ -21,15 +21,15 @@ Open the URL Vite prints (usually http://localhost:5173).
 
 ### Scripts
 
-| Command | What it does |
-|---|---|
-| `npm run dev` | Dev server with hot reload |
-| `npm run build` | Typechecks, then builds to `dist/` |
-| `npm run preview` | Serves the built `dist/` locally |
-| `npm test` | Runs the Vitest suite |
-| `npm run typecheck` | `tsc --noEmit`, no build |
-| `npm run lint` | ESLint |
-| `npm run format` | Prettier, writes in place |
+| Command             | What it does                       |
+| ------------------- | ---------------------------------- |
+| `npm run dev`       | Dev server with hot reload         |
+| `npm run build`     | Typechecks, then builds to `dist/` |
+| `npm run preview`   | Serves the built `dist/` locally   |
+| `npm test`          | Runs the Vitest suite              |
+| `npm run typecheck` | `tsc --noEmit`, no build           |
+| `npm run lint`      | ESLint                             |
+| `npm run format`    | Prettier, writes in place          |
 
 `npm run build` runs `tsc --noEmit` first, so a type error fails the build rather
 than shipping.
@@ -90,13 +90,13 @@ Keep it that way. It is what makes each module readable and testable on its own.
 
 Tutorials live in the file matching their category:
 
-| Category id | File | Display name |
-|---|---|---|
-| `animales` | `src/data/animales.ts` | Animales 🐾 |
-| `naturaleza` | `src/data/naturaleza.ts` | Naturaleza 🌿 |
-| `vehiculos` | `src/data/vehiculos.ts` | Vehículos 🚗 |
+| Category id  | File                     | Display name        |
+| ------------ | ------------------------ | ------------------- |
+| `animales`   | `src/data/animales.ts`   | Animales 🐾         |
+| `naturaleza` | `src/data/naturaleza.ts` | Naturaleza 🌿       |
+| `vehiculos`  | `src/data/vehiculos.ts`  | Vehículos 🚗        |
 | `divertidas` | `src/data/divertidas.ts` | Cosas Divertidas 🎁 |
-| `fantasia` | `src/data/fantasia.ts` | Fantasía ✨ |
+| `fantasia`   | `src/data/fantasia.ts`   | Fantasía ✨         |
 
 Difficulty is one of `facil`, `medio` or `dificil` — shown as 1, 2 or 3 dots on the
 card.

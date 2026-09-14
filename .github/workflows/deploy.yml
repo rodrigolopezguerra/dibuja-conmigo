@@ -35,7 +35,6 @@ jobs:
 
   deploy:
     needs: build
-    if: vars.PAGES_ACTIONS == 'true' # GATE — removed in Slice 7b, do not remove here
     runs-on: ubuntu-latest
     environment:
       name: github-pages

@@ -39,35 +39,34 @@ than shipping.
 ## Folder structure
 
 ```
-app/
-├── index.html              Page shell. All element ids live here.
-├── src/
-│   ├── main.ts             Composition root — owns ALL shared state
-│   ├── types.ts            Tutorial, Step, CategoryId, DifficultyId
-│   ├── config.ts           Colours, stroke widths, timings, limits
-│   ├── canvas.ts           Drawing surface: pointer input, undo, PNG export
-│   ├── guide.ts            SVG guide rendering + step playback
-│   ├── playback-state.ts   Pure playback state machine (unit-tested)
-│   ├── gallery.ts          Tutorial card rendering
-│   ├── filters.ts          Category/difficulty filtering
-│   ├── toolbar.ts          Colour, eraser and brush-size controls
-│   ├── toast.ts            Transient messages
-│   └── data/
-│       ├── categories.ts   Filter chips for categories
-│       ├── difficulties.ts Filter chips for difficulty
-│       ├── index.ts        Barrel — concatenates all categories in order
-│       ├── animales.ts     10 tutorials
-│       ├── naturaleza.ts    7
-│       ├── vehiculos.ts     4
-│       ├── divertidas.ts    6
-│       └── fantasia.ts      4
-└── styles/
-    ├── index.css           Barrel of @imports
-    ├── tokens.css          CSS custom properties — the design system
-    ├── base.css            Reset, body, header, toast
-    ├── gallery.css         Filter chips and tutorial cards
-    ├── board.css           Canvas, guide SVG, step controls
-    └── toolbar.css         Colour swatches and tool buttons
+index.html              Page shell. All element ids live here.
+src/
+├── main.ts             Composition root — owns ALL shared state
+├── types.ts            Tutorial, Step, CategoryId, DifficultyId
+├── config.ts           Colours, stroke widths, timings, limits
+├── canvas.ts           Drawing surface: pointer input, undo, PNG export
+├── guide.ts            SVG guide rendering + step playback
+├── playback-state.ts   Pure playback state machine (unit-tested)
+├── gallery.ts          Tutorial card rendering
+├── filters.ts          Category/difficulty filtering
+├── toolbar.ts          Colour, eraser and brush-size controls
+├── toast.ts            Transient messages
+└── data/
+    ├── categories.ts   Filter chips for categories
+    ├── difficulties.ts Filter chips for difficulty
+    ├── index.ts        Barrel — concatenates all categories in order
+    ├── animales.ts     10 tutorials
+    ├── naturaleza.ts    7
+    ├── vehiculos.ts     4
+    ├── divertidas.ts    6
+    └── fantasia.ts      4
+styles/
+├── index.css           Barrel of @imports
+├── tokens.css          CSS custom properties — the design system
+├── base.css            Reset, body, header, toast
+├── gallery.css         Filter chips and tutorial cards
+├── board.css           Canvas, guide SVG, step controls
+└── toolbar.css         Colour swatches and tool buttons
 ```
 
 ### How the modules talk to each other
@@ -93,11 +92,11 @@ Tutorials live in the file matching their category:
 
 | Category id | File | Display name |
 |---|---|---|
-| `animales` | `app/src/data/animales.ts` | Animales 🐾 |
-| `naturaleza` | `app/src/data/naturaleza.ts` | Naturaleza 🌿 |
-| `vehiculos` | `app/src/data/vehiculos.ts` | Vehículos 🚗 |
-| `divertidas` | `app/src/data/divertidas.ts` | Cosas Divertidas 🎁 |
-| `fantasia` | `app/src/data/fantasia.ts` | Fantasía ✨ |
+| `animales` | `src/data/animales.ts` | Animales 🐾 |
+| `naturaleza` | `src/data/naturaleza.ts` | Naturaleza 🌿 |
+| `vehiculos` | `src/data/vehiculos.ts` | Vehículos 🚗 |
+| `divertidas` | `src/data/divertidas.ts` | Cosas Divertidas 🎁 |
+| `fantasia` | `src/data/fantasia.ts` | Fantasía ✨ |
 
 Difficulty is one of `facil`, `medio` or `dificil` — shown as 1, 2 or 3 dots on the
 card.
@@ -147,7 +146,7 @@ npm test
 
 **Adding a tutorial will break five tests, and that is expected.** Here is why.
 
-`app/src/data/tutorials.test.ts` is a **migration guard**, not a content guard. It
+`src/data/tutorials.test.ts` is a **migration guard**, not a content guard. It
 exists to prove that the 31 tutorials survived the port from the original
 single-file prototype byte for byte. It hard-asserts:
 

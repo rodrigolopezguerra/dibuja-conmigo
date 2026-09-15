@@ -1,0 +1,32 @@
+/* Self-hosted webfonts — replaces the Google Fonts <link> removed from
+   index.html:7-8. Cross-origin Google Fonts cannot be reliably precached by
+   a service worker, so self-hosting is a hard prerequisite for offline, not
+   a parallel nicety.
+
+   WEIGHTS — do not trim further:
+     Baloo 2 700  .icon-btn, .play-btn, .chip, .tut-card span.tname, .toast,
+                  .tool-btn, and .toolbar h3 (no explicit weight; UA default
+                  for h3 is bold = 700)
+     Baloo 2 800  header h1
+     Nunito  500  BODY TEXT. base.css:6 sets font-family with NO font-weight,
+                  so body requests the CSS default 400. With {500,700,800}
+                  available, CSS Fonts 4 matching checks [400,500] ascending
+                  first and picks 500. Drop it and every paragraph jumps to
+                  700 — the whole app renders bold. Parity, not preference.
+     Nunito  700  header p, .guide-toggle
+     Nunito  800  .toolbar label, .empty-msg
+
+   THE `latin-` PREFIX IS MANDATORY. Plain `700.css` declares one @font-face
+   per SUBSET — for Baloo 2 that is devanagari 64.3 KB + latin-ext 15.7 KB +
+   vietnamese 5.3 KB + latin 19.0 KB = 104 KB for ONE weight. `unicode-range`
+   stops the BROWSER downloading them, but does NOT stop Vite emitting them
+   or Workbox precaching them: 400+ KB of glyphs that can never render in a
+   Spanish app. Five latin files = ~93 KB total.
+
+   `font-display: swap` is already baked into @fontsource v5 — no override,
+   same FOUT behaviour as the `&display=swap` we are removing. */
+@import '@fontsource/baloo-2/latin-700.css';
+@import '@fontsource/baloo-2/latin-800.css';
+@import '@fontsource/nunito/latin-500.css';
+@import '@fontsource/nunito/latin-700.css';
+@import '@fontsource/nunito/latin-800.css';

@@ -9,8 +9,13 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "test": "vitest run",
+    "test:build": "vitest run --config vitest.dist.config.ts",
     "lint": "eslint .",
     "format": "prettier --write ."
+  },
+  "dependencies": {
+    "@fontsource/baloo-2": "^5.3.0",
+    "@fontsource/nunito": "^5.3.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

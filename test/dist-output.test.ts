@@ -50,9 +50,9 @@ describe('service worker precache manifest', () => {
     expect(woff2, woff2.join('\n')).toHaveLength(5);
     expect(woff2.some((u) => /devanagari|latin-ext|vietnamese|cyrillic|greek/.test(u))).toBe(false);
 
-    // [A, high] exact stem pattern — confirm by listing dist/assets on the
-    // first real build; adjust these 5 strings if @fontsource's emitted
-    // filenames differ.
+    // Stem pattern verified against the real build output and against the
+    // published @fontsource packages. If these 5 change, the font set changed
+    // — re-read styles/fonts.css before touching them.
     const stems = [
       'baloo-2-latin-700',
       'baloo-2-latin-800',
@@ -126,5 +126,24 @@ describe('installability assets', () => {
     for (const file of ['apple-touch-icon-180x180.png', 'favicon.ico', 'logo.svg']) {
       expect(existsSync(join(DIST, file))).toBe(true);
     }
+  });
+});
+
+describe('service worker update policy', () => {
+  it('claims control immediately instead of parking in waiting', () => {
+    const sw = readFileSync(join(DIST, 'sw.js'), 'utf8');
+
+    // These two calls are exactly what `injectRegister: null` buys us, and
+    // nothing else in the suite notices if they disappear.
+    //
+    // Flip it to `false` — which is NOT nullish, so vite-plugin-pwa stops
+    // forcing `skipWaiting`/`clientsClaim` — and the worker instead emits a
+    // SKIP_WAITING message listener. Nothing ever posts that message: our
+    // `onNeedReload` is a deliberate no-op and never calls `updateSW()`. The
+    // new worker would park in `waiting` forever on a tablet whose tab is
+    // never closed, and the silent update would silently never land.
+    expect(sw).toMatch(/self\.skipWaiting\(\)/);
+    expect(sw).toMatch(/clientsClaim\(\)/);
+    expect(sw).not.toMatch(/SKIP_WAITING/);
   });
 });

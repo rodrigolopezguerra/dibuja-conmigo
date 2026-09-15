@@ -20,6 +20,7 @@ import { createGallery } from './gallery';
 import { createGuide } from './guide';
 import { createToast } from './toast';
 import { createToolbar } from './toolbar';
+import { registerPwa } from './pwa';
 
 function requireEl<T extends Element>(id: string, ctor: new () => T): T {
   const node = document.getElementById(id);
@@ -137,3 +138,7 @@ function init(): void {
 // `init()` exactly once under Vite's `type="module"` script loading.
 window.addEventListener('load', init);
 if (document.readyState === 'complete') init();
+
+// Platform-level side effect, deliberately last: not shared state, not a
+// module wire-up. See src/pwa.ts for why the update is silent.
+registerPwa();

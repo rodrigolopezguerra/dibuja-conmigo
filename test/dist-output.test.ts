@@ -106,3 +106,25 @@ describe('service worker registration is wired', () => {
     expect(jsBlobs).toMatch(/serviceWorker/);
   });
 });
+
+describe('installability assets', () => {
+  it('every manifest icon exists in dist and is precached, plus platform icons', () => {
+    const manifest = JSON.parse(readFileSync(join(DIST, 'manifest.webmanifest'), 'utf8')) as {
+      icons?: Array<{ src: string; purpose?: string }>;
+    };
+    const sw = readFileSync(join(DIST, 'sw.js'), 'utf8');
+
+    expect(manifest.icons?.length ?? 0).toBeGreaterThan(0);
+    expect(manifest.icons?.some((icon) => icon.purpose === 'maskable')).toBe(true);
+
+    for (const icon of manifest.icons ?? []) {
+      const rel = icon.src.replace(/^\.\//, '');
+      expect(existsSync(join(DIST, rel))).toBe(true);
+      expect(sw).toContain(rel);
+    }
+
+    for (const file of ['apple-touch-icon-180x180.png', 'favicon.ico', 'logo.svg']) {
+      expect(existsSync(join(DIST, file))).toBe(true);
+    }
+  });
+});

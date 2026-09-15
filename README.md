@@ -21,15 +21,16 @@ Open the URL Vite prints (usually http://localhost:5173).
 
 ### Scripts
 
-| Command             | What it does                       |
-| ------------------- | ---------------------------------- |
-| `npm run dev`       | Dev server with hot reload         |
-| `npm run build`     | Typechecks, then builds to `dist/` |
-| `npm run preview`   | Serves the built `dist/` locally   |
-| `npm test`          | Runs the Vitest suite              |
-| `npm run typecheck` | `tsc --noEmit`, no build           |
-| `npm run lint`      | ESLint                             |
-| `npm run format`    | Prettier, writes in place          |
+| Command              | What it does                                                  |
+| -------------------- | ------------------------------------------------------------- |
+| `npm run dev`        | Dev server with hot reload                                    |
+| `npm run build`      | Typechecks, then builds to `dist/`                            |
+| `npm run preview`    | Serves the built `dist/` locally                              |
+| `npm test`           | Runs the Vitest suite                                         |
+| `npm run test:build` | Asserts against the built `dist/` — run AFTER `npm run build` |
+| `npm run typecheck`  | `tsc --noEmit`, no build                                      |
+| `npm run lint`       | ESLint                                                        |
+| `npm run format`     | Prettier, writes in place                                     |
 
 `npm run build` runs `tsc --noEmit` first, so a type error fails the build rather
 than shipping.
@@ -195,6 +196,56 @@ static host can serve.
 `vite.config.ts` sets `base: './'` so asset paths stay relative. That matters: with
 absolute paths the build works at a domain root but breaks on a GitHub Pages
 project URL like `usuario.github.io/repo/`. Relative paths work in both.
+
+---
+
+## Offline support
+
+After one online visit, the app works fully offline: a service worker
+precaches the HTML, JS, CSS, self-hosted fonts, and manifest, so a tablet in
+airplane mode can still open and use it.
+
+### How updates work
+
+Updates are silent by design — there is no "new version available" prompt.
+A new service worker installs and activates in the background the next time
+the device is online; the currently open page keeps running unchanged so a
+child's in-progress drawing is never interrupted by a reload. The new
+version is served automatically the next time the app is fully closed and
+reopened.
+
+### Regenerating icons
+
+All app icons (manifest PNGs, apple-touch-icon, favicon) are generated from
+`public/logo.svg` via `pwa-assets.config.ts`. After changing the source SVG:
+
+```bash
+npx @vite-pwa/assets-generator@2.0.0
+```
+
+Commit the regenerated files in `public/`. This tool is intentionally not a
+project dependency (it pulls in `sharp`, a native binary, for something that
+changes rarely), so it always runs via `npx`.
+
+### Recovery: un-bricking a broken precache
+
+If a bad service worker ever ships (e.g. it precaches something broken), the
+fix must ship as code — the device cannot be reached via DevTools once it's
+in a child's hands. In `vite.config.ts`, uncomment the `selfDestroying: true`
+line inside the `VitePWA(...)` plugin config, push to `main`, wait for the
+deploy, open the app **once** on the affected device to let it unregister
+itself and purge Cache Storage, then **revert** the change and deploy again
+normally. Never set this via an environment variable — it is a destructive,
+one-way switch that should require a deliberate code change to flip.
+
+### `npm run test:build`
+
+A second Vitest config (`vitest.dist.config.ts`) asserts against the actual
+built `dist/` — the exact bytes GitHub Pages serves — not just the source.
+It runs in CI right after `npm run build`, before the deploy artifact is
+uploaded, so a broken build output blocks deployment. Run it locally after
+`npm run build` whenever you touch fonts, the service worker config, or the
+manifest.
 
 ---
 

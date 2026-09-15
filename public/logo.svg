@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="Dibujá Conmigo">
+  <title>Dibujá Conmigo</title>
+
+  <!-- Palette mirrors the custom properties in styles/tokens.css -->
+  <rect x="8" y="8" width="496" height="496" rx="112"
+        fill="#FFC93C" stroke="#2B2B2B" stroke-width="16" />
+
+  <!-- Pencil, drawn upright then rotated so it reads as a diagonal stroke -->
+  <g transform="translate(256 256) rotate(-45)"
+     stroke="#2B2B2B" stroke-width="14" stroke-linejoin="round" stroke-linecap="round">
+    <!-- eraser -->
+    <path d="M-44-86h88v34a16 16 0 0 1-16 16h-56a16 16 0 0 1-16-16z" fill="#B79CED" />
+    <!-- ferrule -->
+    <rect x="-44" y="-40" width="88" height="26" fill="#FFFBF2" />
+    <!-- barrel -->
+    <rect x="-44" y="-14" width="88" height="128" fill="#FF6B4A" />
+    <!-- wooden tip -->
+    <path d="M-44 114h88l-44 62z" fill="#FFFBF2" />
+    <!-- graphite point -->
+    <path d="M-13 158h26l-13 18z" fill="#2B2B2B" />
+  </g>
+</svg>
